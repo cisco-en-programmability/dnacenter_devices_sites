@@ -94,6 +94,7 @@ def pprint(json_data):
     print(json.dumps(json_data, indent=4, separators=(' , ', ' : ')))
 
 
+# noinspection PyUnboundLocalVariable
 def main():
     """
     This script will ask the user for input a name for a device or a site.
@@ -133,6 +134,7 @@ def main():
                     site_address = site['locationAddress']
                     break
             devices_info_dict.update({device_name: site_name})
+            # noinspection PyUnboundLocalVariable
             sites_address_dict.update({site_name: site_address})
 
     # ask the user to enter the name of a network device or a site
