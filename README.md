@@ -18,7 +18,7 @@ It will collect the sites and devices inventory and search for:
 
 **Usage**
 
-Here some sample for the output:
+Here are some samples for the the script run for few different user provided values:
 
 ----------
 Please enter the name of a network device or partial name of a site (using the format "site name/floor #" with "floor #" optional): NYC
