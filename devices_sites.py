@@ -95,6 +95,15 @@ def pprint(json_data):
 
 
 def main():
+    """
+    This script will ask the user for input a name for a device or a site.
+    It will collect the sites and devices inventory and search for:
+     - exact match for the device name
+     If found it will return the site name and address for the device
+     - partial match for the site name
+     If found it will return the site name, address and the device inventory for the site
+    """
+
     # get the Cisco DNA Center Auth
     dnac_auth = get_dnac_jwt_token(DNAC_AUTH)
 
@@ -109,7 +118,9 @@ def main():
     # select all the nodes from the topology_nodes_list that are assigned to sites
     # using the site_id, select the site name and address for each device from the site_info_list
 
-    device_info_list = []  # create the list with all the devices info
+    devices_info_dict = {}  # create the dict with all the devices info
+    sites_address_dict = {}  # create the dict with the site name to site address mapping
+
     for node in topology_nodes_list:
         device_name = node['label']
         # select only the nodes that are assigned to a site, by checking if we have the key 'siteid' in the
@@ -119,9 +130,41 @@ def main():
             for site in site_info_list:
                 if site_id == site['id']:
                     site_name = site['groupNameHierarchy']
+                    site_address = site['locationAddress']
                     break
-            device_info_list.append({device_name: site_name})
-    print(json.dumps(device_info_list))  # save the device_list to Splunk App index
+            devices_info_dict.update({device_name: site_name})
+            sites_address_dict.update({site_name: site_address})
+
+    # ask the user to enter the name of a network device or a site
+    search_value = input('\nPlease enter the name of a network device or partial name of a site '
+                         '(using the format "site name/floor #" with "floor #" optional): ')
+
+    # use the search_value to search for device names matches using the device_info_dict keys
+    found = False
+    dict_keys = dict.keys(devices_info_dict)
+
+    if search_value in dict_keys:
+        # match found, collect the site name and address for the device
+        device_site_name = devices_info_dict[search_value]
+        device_site_address = sites_address_dict[device_site_name]
+        print('\nThe device with the name "' + search_value + '" location is: "'
+              + device_site_name + '", address: "' + device_site_address + '"')
+        found = True
+
+    # use the search_value to search for location names matches, using the device_info_dict values
+    device_list = []
+    for device, location in dict.items(devices_info_dict):
+        if search_value in location:
+            device_list.append(device)
+            location_address = sites_address_dict[location]
+            location_name = location
+    if device_list:
+        print('\nThe location with the name "' + location_name + '", address: "' + location_address +
+              '",\nhas these devices:', (', '.join(device_list)))
+        found = True
+
+    if not found:
+        print('\nThe input "' + search_value + '", is not a match for any network devices or sites names')
 
 
 if __name__ == '__main__':
